@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DFTALK three.js モデルデータの描画テスト</title>
+ 
+    <!-- three.jsを読み込む -->
+    <script type="text/javascript" src="./three.min.js"></script>
+    <script src="https://rawgithub.com/mrdoob/three.js/master/examples/js/controls/OrbitControls.js"></script>
+ 
+</head>
+ 
+<body>
+ 
+    <div id="render-area">
+        <!-- この中で描画する -->
+    </div>
+ 
+    <script>
+ 
+        // シーンの作成 ------------------------------------------
+        var scene = new THREE.Scene();
+ 
+        // カメラの作成 ------------------------------------------
+        // fov: 画角(視野角)
+        var fov = 75;
+ 
+        var height = 600; // 縦幅
+        var width = 400; // 横幅
+        // aspect: アスペクト比、カメラで撮影したものの縦横比
+        var aspect = height/width;
+ 
+        // near： ニアークリップ、 カメラからの撮影開始位置、これより近いものは撮影しない
+        var near = 1;
+        // far: ファークリップ カメラからの撮影終了位置、これより遠いものは撮影しない
+        var far = 5000;
+ 
+        // カメラ作成
+        var camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+        // カメラ配置
+        camera.position.set(100, 100, 100); // (x, y, z)
+ 
+        // ライティングを設定する ------------------------------------
+        var color = 'white'; // 光の色
+ 
+        // ライトオブジェクト作成
+        var directionalLight = new THREE.DirectionalLight(color, 1.0);
+        directionalLight.position.set(-2, 1, 1).normalize(); // 光源の角度を設定
+        scene.add(directionalLight); // シーンに追加
+ 
+        // 屋外のライティング効果をリアルにしてくれるそうなので、もうひとつライトを追加
+        var hemisphereLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.25);
+        scene.add( hemisphereLight );
+ 
+        // オブジェクトを配置する ----------------------------------------
+        // ジオメトリーの作成
+        var geometry = new THREE.CubeGeometry(50, 50, 50); // サイズ設定（x, y, z）
+        // マテリアルの作成
+        var material = new THREE.MeshPhongMaterial({color: 'orange'});
+        // メッシュの作成
+        cube = new THREE.Mesh(geometry, material);
+        cube.position.set(-50, 0, 0);  // 位置を設定(x, y, z)
+        scene.add(cube); // シーンに追加
+ 
+        // モデルデータをシーンに追加
+        var jsonObj, faceMaterial; // オブジェクトとマテリアルの変数定義
+         
+        // JSONLoaderを使ってモデルデータを読み込む
+        loader = new THREE.JSONLoader();
+        // 引数としてモデルデータのジオメトリーとマテリアルが入ってきます
+        loader.load( "teapot.js", function ( geometry, materials ) {
+         
+            // モデルデータのマテリアルを作成
+            faceMaterial = new THREE.MeshFaceMaterial( materials );
+         
+            // フェースを両面とも表示するための設定
+            for(var i = 0, len = materials.length; i < len; i++){
+                materials[i].side = THREE.DoubleSide;
+            }
+
+             // 新しくマテリアルを作成ピンク
+            //faceMaterial = new THREE.MeshPhongMaterial({color: 'pink', side: THREE.DoubleSide});
+         
+            jsonObj = new THREE.Mesh( geometry, faceMaterial );
+            jsonObj.position.set( 50, -25, 0);
+            jsonObj.scale.set( 15, 15, 15 );
+            scene.add( jsonObj );
+            });
+
+        // レンダラーの追加 -------------------------------------------
+        var renderer = new THREE.WebGLRenderer({antialias: true});
+        renderer.setSize(height, width); // Canvasのサイズ設定
+ 
+        // 背景を灰色に変更 （背景が真っ暗になるのを回避）
+        renderer.setClearColor(0xdddddd, 1 );
+ 
+        // レンダリング -----------------------------------------------
+        function render() {
+ 
+          // 回転アニメーションを追加
+          requestAnimationFrame(render);
+ 
+          cube.rotation.y += 0.01; // y軸に0.01加算
+ 
+          // シーンとカメラを渡してレンダリング（表示）
+          renderer.render(scene, camera);
+        }
+ 
+        // カメラコントロール -----------------------------------------
+        var controls = new THREE.OrbitControls(camera);
+ 
+        // HTMLの読み込みが完了してから実行する
+        window.onload = function(){
+            // render-area内に描画用エレメントを追加
+            document.getElementById('render-area').appendChild(renderer.domElement);
+            render();
+        }
+ 
+    </script>
+ 
+</body>
+</html>
